@@ -1,7 +1,7 @@
 # ut-course-projects
 
 This repository is a collection of projects I have worked in the courses in the University of Texas at Austin.
-Folders are named as <department><course number>-<course name>-<semester><year>.
+Folders are named as `<department><course number>-<course name>-<semester><year>`.
 
 ## About Python scripts
 
