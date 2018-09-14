@@ -70,7 +70,7 @@ def test_2d_normal_faulting():
     sigma_p = np.diag([23, 15, 13.8])
     sigma_g = ct.rotate_tensor(sigma_p, np.transpose(rot_pg))
     sigma_gc = np.diag([15, 13.8, 23])
-    assert np.linalg.norm(sigma_g - sigma_gc) < 1e-3
+    assert np.linalg.norm(sigma_g - sigma_gc)/np.amax(np.fabs(sigma_g)) < 1e-3
 
     fault = ct.FaultPlane(0, 60, unit="degrees")
     nd, ns, nn = fault.calc_bases()
@@ -90,7 +90,7 @@ def test_2d_strike_slip():
     sigma_p = np.diag([45, 30, 25])
     sigma_g = ct.rotate_tensor(sigma_p, np.transpose(rot_pg))
     sigma_gc = np.array([[30, -8.66, 0], [-8.66, 40, 0], [0, 0, 30]])
-    assert np.linalg.norm(sigma_g - sigma_gc) < 1e-3
+    assert np.linalg.norm(sigma_g - sigma_gc)/np.amax(np.fabs(sigma_g)) < 1e-3
 
     fault = ct.FaultPlane(60, 90, unit="degrees")
     nd, ns, nn = fault.calc_bases()
@@ -104,14 +104,15 @@ def test_2d_strike_slip():
     assert math.fabs((sn - 40)/sn) < 1e-2
     assert math.fabs((tau - 8.66)/tau) < 1e-2
 
-def test_3d_oblique_plane():
+def test_3d_normal_faulting():
     angles = ct.EulerAngles(90, 90, 0, unit="degrees")
     rot_pg = angles.calc_rotation_matrix()
     sigma_p = np.diag([5000, 4000, 3000])
     sigma_g = ct.rotate_tensor(sigma_p, np.transpose(rot_pg))
     sigma_gc = np.diag([4000, 3000, 5000])
-    assert np.linalg.norm(sigma_g - sigma_gc) < 1e-3
+    assert np.linalg.norm(sigma_g - sigma_gc)/np.amax(np.fabs(sigma_g)) < 1e-3
 
+    # Fault plane 1
     fault = ct.FaultPlane(45, 60, unit="degrees")
     nd, ns, nn = fault.calc_bases()
     assert np.linalg.norm(nn - np.array([-0.612, 0.612, -0.5])) < 1e-2
@@ -123,4 +124,37 @@ def test_3d_oblique_plane():
     sn, tau = calc_normal_and_shear_components(t, nd, ns, nn)
     assert math.fabs((sn - 3870)/sn) < 1e-2
     assert math.fabs((tau - math.sqrt(649 ** 2 + 433 ** 2))/tau) < 1e-2
+
+    # Fault plane 2
+    fault = ct.FaultPlane(225, 60, unit="degrees")
+    nd, ns, nn = fault.calc_bases()
+    assert np.linalg.norm(nn - np.array([0.612, -0.612, -0.5])) < 1e-2
+
+    t = np.dot(sigma_g, nn)
+    assert np.linalg.norm(t - np.array([2450, -1840, -2500]))/np.linalg.norm(t) \
+            < 1e-2
+
+    sn, tau = calc_normal_and_shear_components(t, nd, ns, nn)
+    assert math.fabs((sn - 3870)/sn) < 1e-2
+    assert math.fabs((tau - math.sqrt(649 ** 2 + 433 ** 2))/tau) < 1e-2
+
+def test_3d_reverse_faulting():
+    angles = ct.EulerAngles(150, 0, 0, unit="degrees")
+    rot_pg = angles.calc_rotation_matrix()
+    sigma_p = np.diag([2400, 1200, 1000])
+    sigma_g = ct.rotate_tensor(sigma_p, np.transpose(rot_pg))
+    sigma_gc = np.array([[2100, -520, 0], [-520, 1500, 0], [0, 0, 1000]])
+    assert np.linalg.norm(sigma_g - sigma_gc)/np.amax(np.fabs(sigma_g)) < 1e-3
+
+    fault = ct.FaultPlane(120, 70, unit="degrees")
+    nd, ns, nn = fault.calc_bases()
+    assert np.linalg.norm(nn - np.array([-0.814, -0.470, -0.342])) < 1e-2
+
+    t = np.dot(sigma_g, nn)
+    assert np.linalg.norm(t - np.array([-1465, -281, -342]))/np.linalg.norm(t) \
+            < 1e-2
+
+    sn, tau = calc_normal_and_shear_components(t, nd, ns, nn)
+    assert math.fabs((sn - 1441)/sn) < 1e-2
+    assert math.fabs((tau - math.sqrt(160 ** 2 + 488 ** 2))/tau) < 1e-2
 
